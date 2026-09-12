@@ -1,11 +1,11 @@
-# backend/app/core/dependencies.py
+# backend/core/dependencies.py
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from app.config import settings
-from app.database import get_db
-from app.models.all_models import User
+from config import settings
+from database import get_db
+from models.all_models import User
 
 # Links Swagger UI's login lock icon directly to our OAuth2-compliant login endpoint
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")

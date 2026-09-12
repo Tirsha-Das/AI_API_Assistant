@@ -30,9 +30,9 @@
 
 # backend/app/routes/users.py
 from fastapi import APIRouter, Depends
-from app.models.all_models import User
-from app.schemas.user import UserResponse
-from app.core.dependencies import get_current_user
+from models.all_models import User
+from schemas.user import UserResponse
+from core.dependencies import get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

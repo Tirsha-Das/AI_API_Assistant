@@ -19,7 +19,7 @@ from sqlalchemy.orm import Session
 from database import engine, Base, get_db
 from models.all_models import User, Conversation, Message
 # 1. Import the router you created
-from routes import users 
+from routes import users, auth
 
 # Build tables if they do not exist
 Base.metadata.create_all(bind=engine)
@@ -28,6 +28,7 @@ app = FastAPI(title="AI API Assistant", description="FastAPI + PostgreSQL Indust
 
 # 2. Register the router with your FastAPI app instance
 app.include_router(users.router)
+app.include_router(auth.router)
 
 # Quick verification route
 @app.get("/health")
