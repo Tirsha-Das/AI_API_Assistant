@@ -1,2 +1,30 @@
+# --- Environment Variables & Secrets ---
 .env
-venv
+.env.local
+.env.*.local
+*.env
+
+# --- Python Virtual Environments ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- Python Caches & Compiled bytecode ---
+**/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# --- Frontend (Node/Next.js) ---
+node_modules/
+.next/
+dist/
+build/
+npm-debug.log*
+
+# --- Operating System Files ---
+.DS_Store
+Thumbs.db
