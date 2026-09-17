@@ -1,5 +1,6 @@
 # backend/app/routes/documents.py
 import logging
+import uuid
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Response
 from sqlalchemy.orm import Session
@@ -7,8 +8,11 @@ from database import get_db
 from models.all_models import Document, User
 from schemas.document import DocumentMetadataResponse
 from core.dependencies import get_current_user
+from qdrant_client.models import PointStruct
+from rag.engine import parse_and_chunk_document, embed_text, qdrant_client
+from config import settings
 
-logger = logging.getLogger("app.documents")
+logger = logging.getLogger("documents")
 router = APIRouter(prefix="/documents", tags=["Document Knowledge Management"])
 
 # Configuration Safeguards
@@ -72,8 +76,37 @@ async def upload_document(
     db.add(new_doc)
     db.commit()
     db.refresh(new_doc)
-    
-    logger.info(f"✅ Success! Ingested Document ID {new_doc.id} securely for tracking layout maps.")
+    try:
+        chunks = parse_and_chunk_document(new_doc.raw_content, new_doc.filename)
+        points = []
+        
+        for item in chunks:
+            vector_array = embed_text(item["text"])
+            points.append(
+                PointStruct(
+                    id=str(uuid.uuid4()), # Generate a unique ID for Qdrant storage
+                    vector=vector_array,
+                    payload={
+                        "document_id": new_doc.id,
+                        "user_id": current_user.id,
+                        "chunk_text": item["text"],
+                        "endpoint_method": item["method"],
+                        "endpoint_path": item["path"]
+                    }
+                )
+            )
+            
+        if points:
+            qdrant_client.upsert(
+                collection_name=settings.QDRANT_COLLECTION,
+                wait=True,
+                points=points
+            )
+            logger.info(f"📡 Upserted {len(points)} vector chunks into Qdrant for Doc ID {new_doc.id}")
+    except Exception as e:
+        logger.error(f"💥 Critical Failure during vector indexing phase loops: {str(e)}")
+        # We do not rollback user metadata text persistence if index execution throws minor errors
+
     return new_doc
 
 
@@ -92,7 +125,14 @@ def delete_document(id: int, db: Session = Depends(get_db), current_user: User =
     doc = db.query(Document).filter(Document.id == id, Document.user_id == current_user.id).first()
     if not doc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Target document asset not found.")
-        
+        # Inside delete_document right before db.delete(doc)
+    qdrant_client.delete(
+        collection_name=settings.QDRANT_COLLECTION,
+        points_selector=PointsSelector(
+            filter=Filter(must=[FieldCondition(key="document_id", match=MatchValue(value=id))])
+        )
+    )
+
     db.delete(doc)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
