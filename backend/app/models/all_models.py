@@ -17,16 +17,28 @@ class User(Base):
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
 
 
+# class Document(Base):
+#     __tablename__ = "documents"
+    
+#     id = Column(Integer, primary_key=True, index=True)
+#     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+#     filename = Column(String(255), nullable=False)
+#     file_path = Column(Text, nullable=False)
+#     created_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    
+#     # Relationships
+#     user = relationship("User", back_populates="documents")
+    
 class Document(Base):
     __tablename__ = "documents"
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     filename = Column(String(255), nullable=False)
-    file_path = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
+    content_type = Column(String(100), nullable=False)  # e.g., 'application/json', 'text/markdown'
+    raw_content = Column(Text, nullable=False)           # Stores raw text documentation contents
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     
-    # Relationships
     user = relationship("User", back_populates="documents")
 
 

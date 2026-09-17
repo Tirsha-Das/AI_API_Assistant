@@ -4,7 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 from database import engine, Base, get_db
 from models.all_models import User, Conversation, Message
-from routes import auth, users, business
+from routes import auth, users, business, document
 
 logging.basicConfig(
     level=logging.INFO,
@@ -21,6 +21,7 @@ logger.info("🚀 Database synchronized and FastAPI application started successf
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(document.router)
 app.include_router(business.router)
 
 @app.get("/health")
