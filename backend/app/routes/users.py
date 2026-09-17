@@ -36,7 +36,7 @@ from core.dependencies import get_current_user
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/profile", response_model=UserResponse)
 def read_current_user(current_user: User = Depends(get_current_user)):
     """Protected endpoint that only returns details if a valid Bearer Token is passed."""
     return current_user

@@ -1,6 +1,6 @@
 # backend/app/models/all_models.py
 import datetime
-from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, Integer, DateTime, ForeignKey, Text, JSON, Float
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -70,3 +70,28 @@ class ToolExecution(Base):
     
     # Relationships
     message = relationship("Message", back_populates="tool_executions")
+
+
+##########################################################################
+class Customer(Base):
+    __tablename__ = "customers"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    # One-to-Many: A business customer can have multiple orders
+    orders = relationship("Order", back_populates="customer", cascade="all, delete-orphan")
+
+
+class Order(Base):
+    __tablename__ = "orders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("customers.id", ondelete="CASCADE"), nullable=False)
+    total_amount = Column(Float, nullable=False)
+    status = Column(String(50), default="pending")  # pending, shipped, delivered
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    customer = relationship("Customer", back_populates="orders")
